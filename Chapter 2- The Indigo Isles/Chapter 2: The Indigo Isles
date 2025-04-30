@@ -1,0 +1,945 @@
+*settings
+	*back: yes
+
+-- *html
+--	<div style="height: 30px;"></div>
+
+-- AIRTABLE SETUP
+>> greeting = "Welcome to our survey adventure!"
+
+*if: r_id
+	>> filter = {"r_id" -> r_id}
+	*program: AirtableFormula
+	
+	*service: Airtable
+		*path: /SurveyStore?filterByFormula={formula}
+		*method: GET
+		*send: {}
+		*success
+			>> retrieved=it["records"]
+		*error
+			>> retrieved = "ERROR"
+	
+	*if: retrieved.size > 0
+		>> name = retrieved[1]["fields"]["Name"]
+		>> greeting = "Welcome to our survey adventure, {name}!"
+
+-- NARRATIVE
+>> narrative_setup = ["Welcome to the Isles of Ilkmaar!", "On the island chain's enchanted shores, you'll sip storm-fruit slushies on black sand beaches, explore unique island habitats, craft special items to sell or trade in your own downtown shop, befriend and take care of the island’s inhabitants, and embark on an epic quest to restore harmony to the magical island chain.", "Ilkmaarian life is intertwined with Indigo, a powerful energy source housed in the Harmony Tower. Ilkmaarians must always maintain the balance of different Indigo energies: Light and Dark, Stability and Growth.", "When a mysterious Disruption strikes, the Harmony Tower shatters, scattering corrupted magic across the islands. With the Indigo energies thrown out of balance, the unique island biomes may become inhospitable to the creatures who live there.", "After the Disruption, the Ilkmaarians have many different things to do, to restore happiness and harmony to their island home.", "The Isles of Ilkmaar is a multiplayer game, and can be played in a team or with friends! There are many ways to help restore balance to the islands, both individually or together.", "Players can venture across the Isles to track down the magical artifacts, rekindle friendships with the creatures, revive the bustling town marketplace, plan and host social gatherings with creatures, and restore and tend to Ilkmaar's diverse biomes and gardens."]
+
+>> narrative_prompts = ["What parts of the game sound the most fun to you? Why?", "The following challenges are each necessary and equally important to the game! Which would you find most motivating to help with or solve?", "Of the remaining game goals, which would you find the most motivating?", "Of the final two game goals, which would you find the most motivating?", "What role would you be most excited to take on in the game, individually or as part of a team? Would you want to have a specialty?"]
+
+>> gameplay_setups = ["Everyone plays games differently! Some players spend more time exploring areas of the game world, while others focus on making friends with characters. Other players spend their time on gathering resources, crafting and trading."]
+
+>> CYOA_options = ["island", "creatures", "anomalies",  "potions", "shops"]
+>> CYOA_prompts = {"island" -> "Exploring, crafting and using special potions to tend to the unique island biomes", "creatures" -> "Interacting with, learning about and befriending different creatures", "shops" -> "Gathering resources and crafting, trading and selling items or gadgets in your own shop", "potions" -> "Researching, crafting and using special potions to tend to sick or enchanted creatures", "anomalies" -> "Investigating and tracking down magical artifacts"}
+>> places_visited = {"island" -> "false", "creatures" -> "false", "shops" -> "false"}
+
+--	Rebuild the Harmony Tower, by investigating and tracking down magical artifacts
+--	Rebuild the island community, by learning about and befriending different creatures
+--	Restore the town center, by crafting, trading and selling items in your own shop
+--	Rebalance the island ecosystems, by crafting and using special potions to tend to the unique biomes
+
+--	investigating and tracking down magical artifacts
+--	learning about and befriending different creatures
+--	crafting, trading and selling potions or gadgets in your own shop
+--	crafting and using special potions to tend to the unique biomes
+
+
+-- SETTINGS
+>> settings = ["Main Town", "Indigo Island"]
+>> setting_setups = ["Ilkmaar's Main Island is where Ilkmaarians go to socialize, trade items, or seek potions. Human Ilkmaarians each have their own homes on the Main Island, and their own shop where they can sell or trade resources and crafted items.", "The different islands of Ilkmaar each have a different feel, and are home to a different species of creature. Below is Indigo Island."]
+>> setting_art = {"Main Town" -> "https://i.imgur.com/VIyhFPf.png", "Indigo Island" -> "https://i.imgur.com/FgsuYB9.png", "Ilkmaar Map" -> "https://i.imgur.com/UWsxopi.png"}
+>> setting_prompts = ["What stands out to you about the image above, of a part of the main island? What are things you like about it? Is there anything you don’t like, or that you would change if you could?", "Looking at this image, what do you notice and what do you wonder about Indigo Island? Is there anything you like or don’t like?"]
+
+
+-- CREATURES
+>> creatures = ["Rock Golems", "Lifeweavers"]
+>> creature_setups = ["The Lifeweavers live on their own lush, green island. They play an important role on Ilkmaar, making sure that plant life is healthy and grows well across all of the island habitats.", "The Lifeweavers could all be very nice, or a bit grumpy. Their moods could change depending on what is happening in the game world, or based on how well they know you.", "There are multiple species of creatures on Ilkmaar, each on their own island."]
+>> creature_art = {"Rock Golems" -> "https://i.imgur.com/dyKHO81.png", "Lifeweavers" -> "https://i.imgur.com/x48fiHG.png", "All" -> "https://i.imgur.com/yF5BR3Y.png"}
+>> creature_prompts = ["If you saw all three of these creatures (A, B and C) in the game, who would you want to interact with first and why?", "How would you imagine the Lifeweavers' culture, behaviors or personalities? What kinds of things would affect their moods?", "How would you choose which creatures to befriend? Should they have a certain personality, special trait or ability?"]
+
+
+-- SHOPS
+>> shop_setups = ["The town center is filled with colorful shops and vendors. Players will each run their own shop where they can sell or trade items to creatures, or to each other.", "A shop could sell a mix of items (anything from giant lollipops to enchanted broomsticks to high-tech gadgets), or specialize in one type (like an ice cream shop, potions shop, or survival supply store)."]
+>> shop_prompts = ["What kind of shop would you want to run? What items would your shop sell or trade?", "Should players on Ilkmaar sell items for currency (coins or money)? Or trade items with creatures and other players? Why?"]
+
+
+-- BONUS
+>> bonus_questions = ["How would you picture players working together in this game?","Later versions of the game will add data to the game world. Where in the game world would you expect to see data?","What kinds of challenges or gameplay do you think data could be useful for?", "What else would you like to see in this game?"]
+
+
+----
+--	CHAPTER 2: EXPLORING ILKMAAR
+--  Contains: Narrative, Town and Island, Creature and Shops
+--  Needs: Meeting the Enemy?
+----
+
+
+-- INTRO/ASSENT
+*header: {greeting}
+	
+We're designing new games for kids, and we want to hear from you!
+
+As you go through the survey, you'll get to make different choices and tell us what you like. Your answers will help us make even better games for kids like you.
+
+Your answers will be kept safe and private. You can stop at any time!
+
+*button: Let's get started!
+
+
+--
+-- NARRATIVE OPEN QUESTION 1
+--
+
+*header: The Isles of Ilkmaar
+
+{narrative_setup[1]}
+
+*image: {setting_art["Ilkmaar Map"]}
+
+{narrative_setup[2]}
+
+*question: {narrative_prompts[1]}
+	*type: paragraph
+	*blank
+	*save: narrative_reaction_1
+
+-- SEND NARRATIVE REACTION
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "NARRATIVE"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = narrative_prompts[1]
+>> dataToSend["fields"]["options"] = "NARRATIVE SETUP"
+>> dataToSend["fields"]["response"] = narrative_reaction_1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+--
+-- GAMEPLAY RANKINGS
+--
+
+*header: The Great Disruption
+{narrative_setup[3]}
+
+{narrative_setup[4]}
+
+*button: Next
+
+*page
+
+	*header: The following challenges are each necessary and equally important to restoring The Isles of Ilkmaar!
+	
+	Which world challenges would you be most motivated to help with or solve? Please use the sliders to order the main game challenges, from most (#1) to least (#4) motivating to you:
+
+	*question: Rebuild the Harmony Tower energy source:
+		*type: slider
+		*save: harmony
+		#4
+		#3
+		#2
+		#1
+		
+	*question: Rekindle friendships and community with the creatures:
+		*type: slider
+		*save: community
+		#4
+		#3
+		#2
+		#1
+		
+	*question: Rebalance the island biomes and ecosystems:
+		*type: slider
+		*save: ecology
+		#4
+		#3
+		#2
+		#1
+
+	*question: Revive the town center, marketplace and shops:
+		*type: slider
+		*save: economy
+		#4
+		#3
+		#2
+		#1
+
+	
+-- SEND GAMEPLAY RANKINGS 1
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Which world challenges would you be most motivated to help with or solve?"
+>> dataToSend["fields"]["options"] = "harmony"
+>> dataToSend["fields"]["response"] = harmony
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+-- SEND GAMEPLAY RANKINGS 2
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Which world challenges would you be most motivated to help with or solve?"
+>> dataToSend["fields"]["options"] = "community"
+>> dataToSend["fields"]["response"] = community
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+-- SEND GAMEPLAY RANKINGS 3
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Which world challenges would you be most motivated to help with or solve?"
+>> dataToSend["fields"]["options"] = "ecology"
+>> dataToSend["fields"]["response"] = ecology
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+
+--
+-- SETTING QUESTION 1
+--
+
+*header: Welcome to Ilkmaar!
+
+{setting_setups[1]}
+*image: {setting_art["Main Town"]}
+
+-- SEND GAMEPLAY RANKINGS 4
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Which world challenges would you be most motivated to help with or solve?"
+>> dataToSend["fields"]["options"] = "economy"
+>> dataToSend["fields"]["response"] = economy
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+*question: {setting_prompts[1]}
+	*type: paragraph
+	*blank
+	*save: setting_reaction_1
+
+-- SEND SETTING REACTION
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "SETTING"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = setting_prompts[1]
+>> dataToSend["fields"]["options"] = setting_art["Main Town"]
+>> dataToSend["fields"]["response"] = setting_reaction_1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+--
+-- CYOA BEGIN- What do do first?
+--
+
+--
+-- GAMEPLAY QUESTION 1
+--
+
+*page
+	*header: Gameplay time! What sounds fun?
+
+	{gameplay_setups[1]}
+
+	All of these game activities will be equally important to make progress in the game world. Please use the sliders to order the game activities, from most (#1) to least (#5) enjoyable to you:
+
+	*question: {CYOA_prompts[CYOA_options[1]]}
+		*type: slider
+		*save: o1
+		#5
+		#4
+		#3
+		#2
+		#1
+	
+	*question: {CYOA_prompts[CYOA_options[2]]}
+		*type: slider
+		*save: o2
+		#5
+		#4
+		#3
+		#2
+		#1
+	
+	*question: {CYOA_prompts[CYOA_options[3]]}
+		*type: slider
+		*save: o3
+		#5
+		#4
+		#3
+		#2
+		#1
+
+	*question: {CYOA_prompts[CYOA_options[4]]}
+		*type: slider
+		*save: o4
+		#5
+		#4
+		#3
+		#2
+		#1
+		
+	*question: {CYOA_prompts[CYOA_options[5]]}
+		*type: slider
+		*save: o5
+		#5
+		#4
+		#3
+		#2
+		#1
+
+-- SEND GAMEPLAY RANKINGS 1
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Please use the sliders to order the game activities, from most (#1) to least (#5) enjoyable to you."
+>> dataToSend["fields"]["options"] = CYOA_prompts[CYOA_options[1]]
+>> dataToSend["fields"]["response"] = o1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+-- SEND GAMEPLAY RANKINGS 2
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Please use the sliders to order the game activities, from most (#1) to least (#5) enjoyable to you."
+>> dataToSend["fields"]["options"] = CYOA_prompts[CYOA_options[2]]
+>> dataToSend["fields"]["response"] = o2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+-- SEND GAMEPLAY RANKINGS 3
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Please use the sliders to order the game activities, from most (#1) to least (#5) enjoyable to you."
+>> dataToSend["fields"]["options"] = CYOA_prompts[CYOA_options[3]]
+>> dataToSend["fields"]["response"] = o3
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+
+
+
+
+-- >> next = ""
+-- *for: choice, prompt in CYOA_prompts
+--	*if: prompt = CYOA_prompt_choice
+--		>> next = choice
+-- *goto: {next}
+
+
+--
+-- SETTING QUESTION 2
+--
+
+*label: island
+*header: The Indigo Island
+
+{setting_setups[2]}
+*image: {setting_art["Indigo Island"]}
+
+-- SEND GAMEPLAY RANKINGS 4
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Please use the sliders to order the game activities, from most (#1) to least (#5) enjoyable to you."
+>> dataToSend["fields"]["options"] = CYOA_prompts[CYOA_options[4]]
+>> dataToSend["fields"]["response"] = o4
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+-- SEND GAMEPLAY RANKINGS 5
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+>> dataToSend["fields"]["question"] = "RANK"
+>> dataToSend["fields"]["prompt"] = "Please use the sliders to order the game activities, from most (#1) to least (#5) enjoyable to you."
+>> dataToSend["fields"]["options"] = CYOA_prompts[CYOA_options[5]]
+>> dataToSend["fields"]["response"] = o5
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+*question: {setting_prompts[2]}
+	*type: paragraph
+	*blank
+	*save: setting_reaction_2
+
+-- SEND SETTING REACTION
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "SETTING"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = setting_prompts[2]
+>> dataToSend["fields"]["options"] = setting_art["Indigo Island"]
+>> dataToSend["fields"]["response"] = setting_reaction_2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+>> places_visited["island"] = "true"
+-- *goto: what_to_do
+
+
+--
+-- CREATURE QUESTION 1
+--
+
+*label: creatures
+*header: Meet the Lifeweavers!
+
+{creature_setups[1]}
+
+*image: {creature_art["Lifeweavers"]}
+	
+*question: {creature_prompts[1]}
+	*type: paragraph
+	*blank
+	*save: creature_reaction_1
+	
+-- SEND CREATURE REACTION
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CREATURE"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = creature_prompts[1]
+>> dataToSend["fields"]["options"] = creature_art["Lifeweavers"]
+>> dataToSend["fields"]["response"] = creature_reaction_1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+--
+-- CREATURE QUESTION 2
+--
+
+*header: Creature Design
+
+{creature_setups[2]}
+*image: {creature_art["Lifeweavers"]}
+	
+*question: {creature_prompts[2]}
+	*type: paragraph
+	*blank
+	*save: creature_reaction_2
+	
+-- SEND CREATURE REACTION 2
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CREATURE"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = creature_prompts[2]
+>> dataToSend["fields"]["options"] = creature_art["Lifeweavers"]
+>> dataToSend["fields"]["response"] = creature_reaction_2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+>> places_visited["creatures"] = "true"
+
+
+--
+-- CREATURE QUESTION 2
+--
+
+*header: Befriending Creatures
+
+{creature_setups[3]}
+*image: {creature_art["All"]}
+	
+*question: {creature_prompts[3]}
+	*type: paragraph
+	*blank
+	*save: creature_reaction_3
+	
+-- SEND CREATURE REACTION 2
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CREATURE"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = creature_prompts[3]
+>> dataToSend["fields"]["options"] = creature_art["All"]
+>> dataToSend["fields"]["response"] = creature_reaction_3
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+>> places_visited["creatures"] = "true"
+
+
+
+-- *goto: what_to_do
+
+	
+--
+-- SHOP QUESTION 1
+--
+
+*label: shops
+*header: The Marketplace and Player Shops
+
+{shop_setups[1]}
+
+{shop_setups[2]}
+
+*question: {shop_prompts[1]}
+	*placeholder: Tell us what you think.
+	*type: paragraph
+	*blank
+	*save: shop_reaction_1
+
+-- SEND SHOP REACTION
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "SHOP"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = shop_prompts[1]
+>> dataToSend["fields"]["options"] = "SHOP SETUP"
+>> dataToSend["fields"]["response"] = shop_reaction_1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+--
+-- SHOP QUESTION 2
+--
+
+*question: {shop_prompts[2]}
+	*type: paragraph
+	*blank
+	*save: shop_reaction_2
+
+-- SEND SHOP REACTION
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "SHOP"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = shop_prompts[2]
+>> dataToSend["fields"]["options"] = "SHOP SETUP"
+>> dataToSend["fields"]["response"] = shop_reaction_2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+>> places_visited["shops"] = "true"
+-- *goto: what_to_do
+
+
+-- CYOA FLOW LOGIC
+-- *label: what_to_do
+
+-->> options = []
+-->> choice = ""
+
+--*for: place, visited in places_visited
+--	*if: visited = "false"
+--		>> options.add(place)
+
+--*if: options.size > 1
+--	>> send = "true"
+--	*question: What part of the game would you want to focus on next?
+--		{CYOA_prompts[options[1]]}
+--			>> choice = options[1]
+--		{CYOA_prompts[options[2]]}
+--			>> choice = options[2]
+
+--*if: send = true
+--	-- SEND SECOND CYOA CHOICE
+--	>> dataToSend = {"fields" -> {}}
+--	>> dataToSend["fields"]["r_id"] = r_id
+--	>> dataToSend["fields"]["topic"] = "GAMEPLAY"
+--	>> dataToSend["fields"]["question"] = "CHOICE"
+--	>> dataToSend["fields"]["prompt"] = "What would you most want to do next?"
+--	>> dataToSend["fields"]["options"] = "{CYOA_prompts[options[1]]},{CYOA_prompts[options[2]]}"
+--	>> dataToSend["fields"]["response"] = choice
+	
+--	*service: Airtable
+--		*path: /Responses
+--		*method: POST
+--		*send: dataToSend
+--		*success
+--			>>recordInserted = 1
+--		*error
+--			>>recordInserted = 0
+--			>>error = it
+		
+--	*if: recordInserted = 0
+--		{error_message}
+--		Here are the details: {error}
+		
+--*if: options.size = 1
+--	>> choice = options[1]
+
+--*if: options.size = 0
+--	>> choice = "the_end"
+
+--*goto: {choice}
+
+	
+-- END
+*label: the_end
+*header: The End
+Thank you for you help!
+
+We have recorded your choices, and will use them to create our game!
+
+*question: Would you like to tell us some of *your* ideas for the game?
+	Yes! I'd like to share some of my own ideas.
+		*goto: bonus
+	No thanks! I'm done for now.
+		*goto: thanks
+
+
+-- BONUS QUESTIONS
+*label: bonus
+*page
+	*header: Please lend us your imagination!
+	
+	Here are some questions we have!
+	
+	You can tell us as much or as little as you'd like!
+	
+	You can also leave questions blank, and can stop any time.
+		
+	*question: {bonus_questions[1]}
+		*type: paragraph
+		*blank
+		*save: idea1
+		
+	*question: {bonus_questions[2]}
+		*type: paragraph
+		*blank
+		*save: idea2
+	
+	*question: {bonus_questions[3]}
+		*type: paragraph
+		*blank
+		*save: idea3
+
+	*question: {bonus_questions[4]}
+		*type: paragraph
+		*blank
+		*save: idea4
+
+--
+-- SEND IDEAS
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "GAMEPLAY"
+>> dataToSend["fields"]["prompt"] = bonus_questions[1]
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+--
+-- SEND IDEA2
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "DATA"
+>> dataToSend["fields"]["prompt"] = bonus_questions[2]
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+--
+-- SEND IDEA 3
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "DATA"
+>> dataToSend["fields"]["prompt"] = bonus_questions[3]
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea3
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+--
+-- SEND IDEA 4
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "WORLD"
+>> dataToSend["fields"]["prompt"] = bonus_questions[4]
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea4
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+*label: thanks
+*header: Thanks!
+Wonderful! Thank you so much for all your help :)

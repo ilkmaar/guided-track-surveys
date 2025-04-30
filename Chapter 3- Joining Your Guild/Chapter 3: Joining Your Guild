@@ -1,0 +1,508 @@
+-- SETUP
+*settings
+	*back: yes
+
+>> greeting = "Welcome to our survey!"
+>> error_message = "There was an error storing your responses! Please make sure you are using the full survey link sent in the email."
+
+*if: r_id
+	>> dataToSend["fields"]["r_id"] = r_id
+	>> filter = {"r_id" -> r_id}
+	*program: AirtableFormula
+
+	*service: Airtable
+		*path: /SurveyStore?filterByFormula={formula}
+		*method: GET
+		*send: {}
+		*success
+			>> retrieved=it["records"]
+		*error
+			>> retrieved = "ERROR"
+	
+	*if: retrieved.size > 0
+		>> name = retrieved[1]["fields"]["Name"]
+		>> greeting = "Welcome to our survey adventure, {name}!"
+
+-- DATA SETUP
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["survey_id"] = "S3"
+
+-- ORDER
+>> current_page = 1
+>> page_order = ["narrative", "cover", "avatars", "islands", "creatures", "the_end"]
+
+-- COVER
+>> cover = ["Cover Art"]
+>> cover_urls = {"Cover Art" -> "https://i.imgur.com/YwvmcxY.png"}
+
+-- NARRATIVE
+
+-- AVATARS
+>> avatars = ["Avatar Creator", "Character Group"]
+>> avatar_urls = {"Avatar Creator" -> "https://i.imgur.com/cdp63Yf.png", "Character Group" -> "https://i.imgur.com/qS8m0Hz.png"}
+
+-- ISLANDS
+>> islands = ["Growth Island", "Light Island", "Stability Island", "Shadow Island"]
+>> island_urls = {"Growth Island" -> "https://i.imgur.com/11zrNcN.png", "Light Island" -> "https://i.imgur.com/e1qIcdJ.png", "Stability Island" -> "https://i.imgur.com/xCVukc3.png", "Shadow Island" -> "https://i.imgur.com/6wBgz2x.png"}
+
+-- CREATURES
+>> creatures = ["Growth", "Light", "Stability", "Shadow", "All Factions"]
+>> creature_urls = {"Growth" -> "https://i.imgur.com/epEOPqi.png", "Light" -> "https://i.imgur.com/jEkOSpy.png", "Stability" -> "https://i.imgur.com/H1Y0qYs.png", "Shadow" -> "https://i.imgur.com/x08z564.png", "All Factions" -> "https://i.imgur.com/KiCxp8A.png"}
+
+-- INTRO/ASSENT
+*header: {greeting}
+	
+We're designing new games for kids, and we want to hear from you!
+
+As you go through the survey, you'll get to make different choices and tell us what you like. Your answers will help us make even better games for kids like you.
+
+Your answers will be kept safe and private. You can stop at any time!
+
+*button: Let's get started!
+
+--
+-- SEND START
+--
+
+*if: r_id
+	>> dataToSend["fields"]["topic"] = "N/A"
+	>> dataToSend["fields"]["question"] = "N/A"
+	>> dataToSend["fields"]["prompt"] = "N/A"
+	>> dataToSend["fields"]["options"] = "N/A"
+	>> dataToSend["fields"]["response"] = "STARTED"
+	
+	*service: Airtable
+		*path: /Responses
+		*method: POST
+		*send: dataToSend
+		*success
+			>>recordInserted = 1
+		*error
+			>>recordInserted = 0
+			>>error = it
+	
+	*if: recordInserted = 0
+		{error_message}
+		Here are the details: {error}
+		
+--
+-- NARRATIVE
+--
+
+*label: narrative
+
+*header: Welcome to The Isles
+
+Once upon a time, in the mystical Isles of Ilkmaar, four magical islands lived in perfect harmony.
+
+*image: {cover_urls[cover[1]]}
+Each island was home to a unique faction of creatures: those of Light, Shadow, Growth, and Stability. Together, they thrived, and with their energies balanced, created a world of abundance and joy.
+
+*button: Continue...
+
+*header: The Disruption
+But then, a mysterious Disruption shattered the peace, and a strange sickness spread among the creatures. 
+
+Something hidden lurked beneath the lush biomes that once nourished the islands with sweet and magical resources, and the islands themselves fell ill.
+
+*button: Continue...
+
+*header: Saving the Isles
+
+Now, you, a brave adventurer and loyal companion to the creatures, stand at a crossroads. The fate of the Isles rests in your hands. 
+
+Will you STAY, diving deep into the secrets of potion-crafting to heal the enchanted creatures, and restore the bonds of friendship that once united them? 
+
+Or will you TRAVEL, venturing across the islands to uncover the source of this sinister sickness, and restore the delicate balance of the biomes?
+
+*button: Continue...
+
+*page
+	*header: Joining The Guild
+
+	Together with your Guild of Friends, you’ll team up to rebuild community and restore ecological balance, uncovering the islands’ hidden patterns and secrets to reveal the path back to harmony!
+
+	*question: Does this sound like a game you would want to play?
+		*save: narrative_mc1
+		Definitely want to play!
+		Probably want to play.
+		Not sure if I want to play...
+		Probably don't want to play.
+		Definitely don't want to play!
+		
+	*question: Tell us more! What parts of the game sound most appealing-- or what do you think could be improved?
+		*type: paragraph
+		*blank
+		*save: narrative_open1
+
+*page
+	*header: Designing games for YOU
+	
+	We are trying to design a game that YOU would be excited to play. How are we doing so far?
+	
+	*question: So far, does this game sound like it was made for kids like you?
+		*save: narrative_mc2
+		Definitely for me!
+		Probably for me.
+		Not sure if it's for me...
+		Probably NOT for me.
+		Definitely NOT for me!
+		
+	*question: Tell us more! What about this game sounds most relevant or interesting to you-- or not?
+		*type: paragraph
+		*blank
+		*save: narrative_open2
+
+*page
+	*header: Player Strategies
+	
+	In this game, players can do different things:
+	
+	1) Make potions to heal sick creatures.
+	2) Help creatures become friends again.
+	3) Take care of the island by cleaning or fixing it.
+	4) Find out why the creatures are getting sick and stop it.
+	
+	Players can also mix these activities or do something else to help.
+	
+	*question: What role would you like to take on in the game and why?
+		*tip: You can pick from the options above or think of your own ideas!
+		*type: paragraph
+		*blank
+		*save: narrative_open3
+
+--
+-- AVATARS
+--
+
+*label: avatars
+*page
+	*header: The Guild
+
+	Each player customizes the appearance of their own player avatar. Avatars can have different body types, skin color, hair style and color, and clothing options.
+	
+	*image: {avatar_urls[avatars[2]]}
+
+	*question: Do you feel the avatars shown are diverse, and represent many different kinds of people?
+		*save: avatars_mc1
+		Strongly agree!
+		Agree.
+		Neutral...
+		Disagree.
+		Strongly disagree!
+		
+	*question: Who are we missing?
+		*type: paragraph
+		*tip: If there's something important to your identity or background that you don't see represented in our characters, please share your thoughts!
+		*blank
+		*save: avatars_open1
+		
+*page
+	*header: Avatar Creator
+
+	Players customize their avatar using the Avatar Creator.
+	
+	*image: {avatar_urls[avatars[1]]}
+	
+	*question: What else about the avatars would you like to be able to choose or change?
+		*type: paragraph
+		*tip: Are there specific clothing, accessories, body type, facial features or expressions you'd like to be able to choose?
+		*blank
+		*save: avatars_open2
+		
+	*question: What is the most important choice you'd want to be able to make about your avatar's appearance/identity?
+		*type: paragraph
+		*blank
+		*save: avatars_open3
+	
+*page
+	*header: Player Profiles
+
+	*question: If you had a character profile that other players could see, what would you want to be able to show on it? Check all that apply!
+		*type: checkbox
+		*save: avatars_checkbox
+		*other: Other
+		pronouns
+		favorite creature or faction
+		favorite food
+		a fun fact about your character
+		current game activity
+		game scores or stats
+		badges or achievements
+		
+	*question: Share any personal touches you would want to display to other players in the game.
+		*type: paragraph
+		*blank
+		*save: avatars_open4
+
+--
+-- The ISLANDS
+--
+
+*label: islands
+*header: The Four Islands
+
+There are four Islands on the Isles of Ilkmaar: Growth, Light, Stability, and Shadow.
+
+*image: {island_urls[islands[1]]}
+	*caption: {islands[1]}
+
+*html
+	<br>
+	<br>
+
+*image: {island_urls[islands[2]]}
+	*caption: {islands[2]}
+	
+*html
+	<br>
+	<br>
+
+*image: {island_urls[islands[3]]}
+	*caption: {islands[3]}
+
+*html
+	<br>
+	<br>
+	
+*image: {island_urls[islands[4]]}
+	*caption: {islands[4]}
+
+*question: Based on the images above, which island appeals to you the most?
+	*save: favorite_island
+	{islands[1]}
+		*picture: {island_urls[islands[1]]}
+	{islands[2]}
+		*picture: {island_urls[islands[2]]}
+	{islands[3]}
+		*picture: {island_urls[islands[3]]}
+	{islands[4]}
+		*picture: {island_urls[islands[4]]}
+
+*page
+	*header: My Favorite Island
+
+	*image: {[island_urls[favorite_island]]}
+		*caption: You choose {favorite_island} as your favorite!
+	
+	>> not_chosen = []
+	>> not_chosen_urls = []
+	*for: island_name, url in island_urls
+		*if: not island_name = favorite_island
+			>> not_chosen.add(island_name)
+			>> not_chosen_urls.add(url)
+
+	>> i = 1
+	>> temp_list = ""
+	*while: i <= not_chosen.size
+		>> temp_list = "{temp_list}{not_chosen[i]}"
+		*if: not i = not_chosen.size
+			>> temp_list = "{temp_list}, "
+		>> i = i + 1
+	
+	>> temp_tableHTML = "<table><tbody><tr>"
+	*for: i, url in not_chosen_urls
+		>> temp_tableHTML = "{temp_tableHTML}<td><img src={url}></td>"
+	>> temp_tableHTML = "{temp_tableHTML}</tr></tbody></table>"
+
+	*html
+		<p><b>Not Chosen: </b><i>{temp_list}</i></p>
+
+	*html
+		<table>
+		    <tbody>
+		        <tr>
+		            <td><img src="{not_chosen_urls[1]}"></td>
+		            <td><img src="{not_chosen_urls[2]}"></td>
+		            <td><img src="{not_chosen_urls[3]}"></td>
+		        </tr>
+		    </tbody>
+		</table>
+
+	*question: Tell us more! What about {favorite_island} made you choose it?
+		*type: paragraph
+		*blank
+		*save: islands_open1
+		
+	*question: What do you think of the other islands, too?
+		*type: paragraph
+		*blank
+		*save: islands_open2
+
+*header: The Islands
+	
+When the island ecosystems are all out of balance, some players might focus on helping their favorite home island, and others might try to help all islands equally.
+	
+*question: What would YOU want to do?
+	*type: paragraph
+	*blank
+	*save: islands_open3
+
+*header: Travel from Island to Island
+
+Players need a way to get from one island to the other. They could take a submarine, a boat ride, use a teleporter, or get a ride from a fantastic sea creature.
+	
+*question: How would you want to travel from one island to another?
+	*type: paragraph
+	*blank
+	*save: islands_open4
+
+--
+-- CREATURES
+--
+
+*label: creatures
+*header: The Four Factions
+
+Below are the different types of creatures you'll meet on The Isles of Ilkmaar.
+
+*html
+	<br>
+
+*image: {creature_urls[creatures[1]]}
+	*caption: The {creatures[1]} Creatures
+*html
+	<br>
+	<br>
+
+*image: {creature_urls[creatures[2]]}
+	*caption: The {creatures[2]} Creatures
+*html
+	<br>
+	<br>
+	
+*image: {creature_urls[creatures[3]]}
+	*caption: The {creatures[3]} Creatures
+*html
+	<br>
+	<br>
+	
+*image: {creature_urls[creatures[4]]}
+	*caption: The {creatures[4]} Creatures
+
+*question: Which faction of creatures is your favorite?
+	*save: favorite_creature
+	{creatures[1]}
+		*picture: {creature_urls[creatures[1]]}
+	{creatures[2]}
+		*picture: {creature_urls[creatures[2]]}
+	{creatures[3]}
+		*picture: {creature_urls[creatures[3]]}
+	{creatures[4]}
+		*picture: {creature_urls[creatures[4]]}
+
+*page
+	*header: The Four Factions
+	
+	You choose The {favorite_creature} Creatures as your favorite!
+	
+	*image: {[creature_urls[favorite_creature]]}
+	
+	>> not_chosen = []
+	>> not_chosen_urls = []
+	*for: creature_name, url in creature_urls
+		*if: not creature_name = favorite_creature
+			>> not_chosen.add(creature_name)
+			>> not_chosen_urls.add(url)
+	
+	>> i = 1
+	>> temp_list = ""
+	*while: i <= not_chosen.size
+		>> temp_list = "{temp_list}{not_chosen[i]}"
+		*if: not i = not_chosen.size
+			>> temp_list = "{temp_list}, "
+		>> i = i + 1
+	
+	*html
+		<p><b>Not Chosen: </b><i>{temp_list}</i></p>
+	
+	*html
+		<table>
+		    <tbody>
+		        <tr>
+		            <td><img src="{not_chosen_urls[1]}"></td>
+		            <td><img src="{not_chosen_urls[2]}"></td>
+		            <td><img src="{not_chosen_urls[3]}"></td>
+		        </tr>
+		    </tbody>
+		</table>
+
+	*question: Tell us more! Why did you choose The {favorite_creature} Creatures as your favorite?
+		*type: paragraph
+		*blank
+		*save: creatures_open1
+		
+	*question: What do you think of the other creatures, too?
+		*type: paragraph
+		*blank
+		*save: creatures_open2
+		
+	*question: How would you choose which creatures to befriend, and what would you do to befriend them?
+		*type: paragraph
+		*tip: For example, would you focus on friendships with your favorite faction, or try to befriend all factions equally? Or, would you choose friends some other way?
+		*blank
+		*save: creatures_open3
+
+*page
+	*header: Faction Interactions
+	
+	Creatures from Light, Shadow, Growth, and Stability factions might get along, or they might not-- especially after the Disruption!
+	
+	*image: {[creature_urls["All Factions"]]}
+
+	*question: What's the social life like of the creature factions?
+		*tip: For example, do they get along or fight over something? Tell us a story about how the creatures and factions interact.
+		*type: paragraph
+		*blank
+		*save: creatures_open4
+	
+	*question: When the peace among the creature factions is disrupted, how would you, as a player, want to help rebuild their friendships and community?
+		*tip: What role would you play in the story?
+		*type: paragraph
+		*blank
+		*save: creatures_open5
+
+--
+-- END
+--
+
+*label: the_end
+*header: The End
+Thank you for you help!
+
+We have recorded your choices, and will use them to create our game!
+
+--
+-- SEND COMPLETION
+--
+
+*if: r_id
+	>> dataToSend["fields"]["topic"] = "N/A"
+	>> dataToSend["fields"]["question"] = "N/A"
+	>> dataToSend["fields"]["prompt"] = "N/A"
+	>> dataToSend["fields"]["options"] = "N/A"
+	>> dataToSend["fields"]["response"] = "COMPLETED"
+	
+	*service: Airtable
+		*path: /Responses
+		*method: POST
+		*send: dataToSend
+		*success
+			>>recordInserted = 1
+		*error
+			>>recordInserted = 0
+			>>error = it
+	
+	*if: recordInserted = 0
+		{error_message}
+		Here are the details: {error}
+
+*question: In the future, would you like to be able to name some of the creatures, and help give them unique personalities?
+	*save: creature_design
+	Yes! I'd like to help design creatures in the future.
+	No thanks!
+
+*label: thanks
+*header: Thanks!
+Wonderful! Thank you so much for all your help :)

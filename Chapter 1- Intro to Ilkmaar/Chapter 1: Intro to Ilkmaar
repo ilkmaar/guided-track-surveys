@@ -1,0 +1,1000 @@
+-- SETUP
+*settings
+	*back: yes
+
+>> greeting = "Welcome to our survey!"
+>> error_message = "There was an error storing your responses! Please make sure you are using the full survey link sent in the email."
+
+*if: r_id
+	>> filter = {"r_id" -> r_id}
+	*program: AirtableFormula
+	
+	*service: Airtable
+		*path: /SurveyStore?filterByFormula={formula}
+		*method: GET
+		*send: {}
+		*success
+			>> retrieved=it["records"]
+		*error
+			>> retrieved = "ERROR"
+	
+	*if: retrieved.size > 0
+		>> name = retrieved[1]["fields"]["Name"]
+		>> greeting = "Welcome to our survey adventure, {name}!"
+
+-- GAME CONCEPTS
+>> games = ["Ilkmaar Island", "Camp Ilkmaar"]
+>> blurbs = {"Ilkmaar Island" -> "Embark on a thrilling adventure to an island full of unique biomes and mysterious surprises. As a citizen of Ilkmaar, you’ll manage a tradeshop, tend the community gardens, and explore the Crystal Coves. Keep your eyes open, as some strange things are beginning to happen on the island...", "Camp Ilkmaar" -> "Welcome to a thrilling summer adventure at Camp Ilkmaar! Get ready to explore the strange and wonderful wilderness, learn to craft and trade survival supplies, and help prepare delicious meals at the camp mess hall. Keep your eyes open, as some strange things are beginning to happen on the campgrounds..."}
+>> shorts = {"Ilkmaar Island" -> "Are you ready to embark on a thrilling adventure set in the unique and mysterious biomes of *Ilkmaar Island*?", "Camp Ilkmaar" -> "Or, will you gear up for an unforgettable summer adventure at the strange and wonderful *Camp Ilkmaar*?"}
+
+>> serious_options = {"Ilkmaar Island" -> "For example, the island's natural biomes could be under threat of a major ecological disruption!", "Camp Ilkmaar" -> "For example, the camp leaders could go missing or be in trouble, or the campers might need to save the world!"}
+
+>> silly_options = {"Ilkmaar Island" -> "The island could be visited by silly creatures from another island, who really just like ice cream!", "Camp Ilkmaar" -> "The camp could be visited by silly creatures from the woods, who really just like ice cream!"}
+
+>> creature_intros = {"Ilkmaar Island" -> "You'll meet some different kinds of creatures in the game world!", "Camp Ilkmaar" -> "You'll meet some different kinds of creatures in the game world!"}
+
+
+
+-- MOOD BOARDS
+>> moods = ["Game Style A", "Game Style B","Game Style C", "Game Style D"]
+>> moodboards = {"Game Style A" -> "https://i.imgur.com/9NWV2vL.png", "Game Style B" -> "https://i.imgur.com/44zZNg4.png", "Game Style C" -> "https://i.imgur.com/ltaNvwx.png", "Game Style D" -> "https://i.imgur.com/ODJaiRe.png"}
+
+
+-- PLAYER CHARACTER ART
+>> character_styles = ["Style A", "Style B","Style C", "Style D"]
+>> character_art = {"Style A" -> "https://i.imgur.com/j6aXC5R.png", "Style B" -> "https://i.imgur.com/H7uVndg.png", "Style C" -> "https://i.imgur.com/mcjpCBY.png", "Style D" -> "https://i.imgur.com/0kIWZ6m.png"}
+
+
+-- CREATURE CHARACTER ART
+>> creature_styles = ["E Creatures", "F Creatures","G Creatures"]
+>> creature_art = {"E Creatures" -> "https://i.imgur.com/v2fpGAp.png", "F Creatures" -> "https://i.imgur.com/OQ0pCQI.png", "G Creatures" -> "https://i.imgur.com/dyKHO81.png"}
+
+
+
+-- INTRO/ASSENT
+*header: {greeting}
+	
+We're designing new games for kids, and we want to hear from you!
+
+As you go through the survey, you'll get to make different choices and tell us what you like. Your answers will help us make even better games for kids like you.
+
+Your answers will be kept safe and private. You can stop at any time!
+
+*button: Let's get started!
+
+
+-- MOOD CHOICE
+*header: Part 1 of 4: Game Look and Feel!
+
+Art style can help make games feel serious and dramatic, or light and happy!
+
+We will show you different game art and ask you to pick which you would want to play.
+
+*button: Ready!
+
+*header: The game could look and feel like "{moods[1]}"...
+*image: {moodboards[moods[1]]}
+
+*html
+	<div style="height: 30px;"></div>
+
+
+*header: Or more like "{moods[2]}"...
+*image: {moodboards[moods[2]]}
+
+*question: Which look and feel would you like better?
+	{moods[1]}
+		*picture: {moodboards[moods[1]]}
+	{moods[2]}
+		*picture: {moodboards[moods[2]]}
+	*shuffle
+	*save: choice1
+
+
+--
+-- SEND MOOD CHOICE
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "MOOD"
+>> dataToSend["fields"]["question"] = "CHOICE"
+>> dataToSend["fields"]["prompt"] = "Which look and feel would you like better?"
+>> dataToSend["fields"]["options"] = "[{moods[1]}, {moods[2]}]"
+>> dataToSend["fields"]["response"] = choice1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+-- MOOD REACTION
+*header: Please tell us more!
+*image: {moodboards[choice1]}
+	*caption: You chose {choice1}.
+	
+*question: What kind of game does this feel like to you? What about this style do you like?
+	*type: paragraph
+	*blank
+	*save: response
+
+
+--
+-- SEND MOOD REACTION
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "MOOD"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = "What kind of game does this feel like to you? What about this style do you like?"
+>> dataToSend["fields"]["options"] = choice1
+>> dataToSend["fields"]["response"] = response
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+	
+
+-- MOOD CHOICE 2
+
+*header: Let's choose again! The game could look and feel like "{moods[3]}"...
+*image: {moodboards[moods[3]]}
+
+*html
+	<div style="height: 30px;"></div>
+	
+*header: Or, it could look and feel like "{moods[4]}"...
+*image: {moodboards[moods[4]]}
+
+
+*question: Which look and feel would you like better?
+	{moods[3]}
+		*picture: {moodboards[moods[3]]}
+	{moods[4]}
+		*picture: {moodboards[moods[4]]}
+	*shuffle
+	*save: choice2
+
+
+
+--
+-- SEND MOOD CHOICE 2
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "MOOD"
+>> dataToSend["fields"]["question"] = "CHOICE"
+>> dataToSend["fields"]["prompt"] = "Which look and feel would you like better?"
+>> dataToSend["fields"]["options"] = "[{moods[3]}, {moods[4]}]"
+>> dataToSend["fields"]["response"] = choice2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+
+-- MOOD REACTION 2
+*header: Please tell us more!
+*image: {moodboards[choice2]}
+	*caption: You chose {choice2}.
+	
+*question: What kind of game does this feel like to you? What about this style do you like?
+	*type: paragraph
+	*blank
+	*save: response
+
+
+--
+-- SEND MOOD REACTION 2
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "MOOD"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = "What kind of game does this feel like to you? What about this style do you like?"
+>> dataToSend["fields"]["options"] = choice2
+>> dataToSend["fields"]["response"] = response
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+-- MOOD FAVORITE
+*header: And last... which do you like best of all?
+
+The game world could look and feel like "{choice1}"...
+*image: {moodboards[choice1]}
+
+*html
+	<div style="height: 30px;"></div>
+
+Or, it could look and feel like "{choice2}"...
+*image: {moodboards[choice2]}
+
+*question: Which game style do you like best of all?
+	{choice1}
+		*picture: {moodboards[choice1]}
+	{choice2}
+		*picture: {moodboards[choice2]}
+	*shuffle
+	*save: mood
+	
+	
+--
+-- SEND MOOD FAVORITE
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "MOOD"
+>> dataToSend["fields"]["question"] = "FAVORITE"
+>> dataToSend["fields"]["prompt"] = "Which game style do you like best of all?"
+>> dataToSend["fields"]["options"] = "[{choice1}, {choice2}]"
+>> dataToSend["fields"]["response"] = mood
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+
+-- GAME CONCEPTS PROMPT TEXT
+*header: Part 2 of 4: The Story!
+We are working on two different game stories!
+
+We want to know which one sounds more fun to you.
+
+Can you help us choose?
+
+*button: Tell me about Game #1!
+
+*label: game_concepts
+
+-- CONCEPT 1 TEXT
+*header: Game #1: {games[1]}
+
+{blurbs[games[1]]}
+
+*button: OK. Tell me about Game #2!
+
+-- CONCEPT 2 TEXT
+*header: Game #2: {games[2]}
+
+{blurbs[games[2]]}
+
+*question: Are you ready to choose?
+	Yes!
+		*goto: concept_questions
+	No, I want to know more first!
+		*goto: learn_more
+	Let me read the first one again.
+		*goto: game_concepts
+
+*label: learn_more
+*header: Tell me more...
+
+It's hard to make a choice with so little information!
+
+Let us know what we should tell you more about for next time.
+
+*question: What would you like to know about each game, before deciding?
+	*type: paragraph
+	*blank
+	
+Thank you! We will add more information next time. 
+For now, please read the choices again to decide.
+	
+*goto: game_concepts
+
+
+
+
+
+-- GAME CONCEPT CHOICE
+*label: concept_questions
+*header: Let's choose!
+
+So what's it going to be?
+
+{shorts[games[1]]}
+
+{shorts[games[2]]}
+
+*question: Which game would you like to play most?
+	{games[1]}
+	{games[2]}
+	*save: game
+
+
+--
+-- SEND GAME CHOICE
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CONCEPT"
+>> dataToSend["fields"]["question"] = "CHOICE"
+>> dataToSend["fields"]["prompt"] = "Which game would you like to play most?"
+>> dataToSend["fields"]["options"] = "[{games[1]}, {games[2]}]"
+>> dataToSend["fields"]["response"] = game
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+
+
+
+
+-- CONCEPT QUESTIONS
+*header: You chose {game}! Please tell us more.
+
+*{game}*: {blurbs[game]}
+
+*question: What did you like most about this game idea? Why did you choose it?
+	*type: paragraph
+	*blank
+	*save: response
+
+--
+-- SEND GAME REACTIONS
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CONCEPT"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = "What did you like most about this game idea? Why did you choose it?"
+>> dataToSend["fields"]["options"] = game
+>> dataToSend["fields"]["response"] = response
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+-- GAME SERIOUS VS LIGHT/HAPPY
+*header: What kind of game should {game} be?
+
+Depending on what happens in {game}, the game story could be pretty *dramatic or serious*. {serious_options[game]}
+
+But the game could also be more *silly, funny or lighthearted*. {silly_options[game]}
+
+*question: Would you like {game} to be more serious, or more silly-- or a mix of both? Please share your thoughts.
+	*type: paragraph
+	*blank
+	*save: response
+
+--
+-- SEND GAME REACTIONS
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CONCEPT"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = "Would you like {game} to be more serious, or more silly-- or a mix of both? Please share your thoughts."
+>> dataToSend["fields"]["options"] = game
+>> dataToSend["fields"]["response"] = response
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+
+
+--PLAYER CHARACTER STYLE QUESTIONS
+*header: Part 3 of 4: Character Art!
+
+The characters you and friends play as in the game can look different!
+
+They can be drawn in different shapes and sizes, or different levels of detail.
+
+We will show you different styles and ask you to pick your favorites.
+
+*button: Ready!
+
+*header: The characters could be drawn in {character_styles[1]}...
+*image: {character_art[character_styles[1]]}
+
+*html
+	<div style="height: 30px;"></div>
+	
+*header: Or in {character_styles[2]}...
+*image: {character_art[character_styles[2]]}
+
+*question: Which style do you like better?
+	{character_styles[1]}
+		*picture: {character_art[character_styles[1]]}
+	{character_styles[2]}
+		*picture: {character_art[character_styles[2]]}
+	*save: character_choice1
+
+
+--
+-- SEND CHARACTER CHOICE 1
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CHARACTER"
+>> dataToSend["fields"]["question"] = "CHOICE"
+>> dataToSend["fields"]["prompt"] = "Which style do you like better?"
+>> dataToSend["fields"]["options"] = "[{character_styles[1]},{character_styles[2]}]"
+>> dataToSend["fields"]["response"] = character_choice1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+	
+-- CHARACTER REACTION
+
+*image: {character_art[character_choice1]}
+	*caption: You liked {character_choice1} better!
+		
+*question: Tell us about this style! What did you like most about it? 
+	*type: paragraph
+	*blank
+	*save: reaction
+	
+--
+-- SEND CHARACTER REACTION 1
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CHARACTER"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = "Tell us about this style! What did you like most about it?"
+>> dataToSend["fields"]["options"] = character_choice1
+>> dataToSend["fields"]["response"] = reaction
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+
+
+-- CHARACTER CHOICE 2
+*header: Two more! The characters could be drawn in {character_styles[3]}...
+*image: {character_art[character_styles[3]]}
+
+*html
+	<div style="height: 30px;"></div>
+	
+*header: Or {character_styles[4]}...
+*image: {character_art[character_styles[4]]}
+
+*question: Which style do you like better?
+	{character_styles[3]}
+		*picture: {character_art[character_styles[3]]}
+	{character_styles[4]}
+		*picture: {character_art[character_styles[4]]}
+	*save: character_choice2
+
+--
+-- SEND CHARACTER CHOICE 2
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CHARACTER"
+>> dataToSend["fields"]["question"] = "CHOICE"
+>> dataToSend["fields"]["prompt"] = "Which style do you like better?"
+>> dataToSend["fields"]["options"] = "[{character_styles[3]},{character_styles[4]}]"
+>> dataToSend["fields"]["response"] = character_choice2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+
+-- CHARACTER REACTION 2
+*image: {character_art[character_choice2]}
+	*caption: You liked {character_choice2} better!
+		
+*question: Tell us about this style! What did you like most about it? 
+	*type: paragraph
+	*blank
+	*save: reaction
+	
+
+--
+-- SEND CHARACTER REACTION 2
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CHARACTER"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = "Tell us about this style! What did you like most about it? "
+>> dataToSend["fields"]["options"] = character_choice2
+>> dataToSend["fields"]["response"] = reaction
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+
+
+
+-- CHARACTER FAVORITE
+*header: And last... which character style did you like best of all?
+
+The characters could look like "{character_choice1}"...
+*image: {character_art[character_choice1]}
+
+*html
+	<div style="height: 30px;"></div>
+
+Or, they could look like "{character_choice2}"...
+*image: {character_art[character_choice2]}
+
+*question: Which character style did you like best of all?
+	{character_choice1}
+		*picture: {character_art[character_choice1]}
+	{character_choice2}
+		*picture: {character_art[character_choice2]}
+	*shuffle
+	*save: player_style
+
+--
+-- SEND CHARACTER FAVORITE
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CHARACTER"
+>> dataToSend["fields"]["question"] = "FAVORITE"
+>> dataToSend["fields"]["prompt"] = "Which character style did you like best of all?"
+>> dataToSend["fields"]["options"] = "[{character_choice1},{character_choice2}]"
+>> dataToSend["fields"]["response"] = player_style
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+
+
+
+
+
+-- CHARACTERS + CREATURES STORY SETUP
+*header: Part 4 of 4: The Creatures!
+
+{creature_intros[game]}
+
+The creatures could be friendly and helpful... or could cause trouble!
+
+*header: The {creature_styles[1]}:
+*image: {creature_art[creature_styles[1]]}
+
+*html
+	<div style="height: 30px;"></div>
+	
+*header: The {creature_styles[2]}:
+*image: {creature_art[creature_styles[2]]}
+
+*html
+	<div style="height: 30px;"></div>
+	
+*header: The {creature_styles[3]}:
+*image: {creature_art[creature_styles[3]]}
+
+
+*question: Which kind of creatures would you be most excited to find in the game world?
+	{creature_styles[1]}
+		*picture: {creature_art[creature_styles[1]]}
+	{creature_styles[2]}
+		*picture: {creature_art[creature_styles[2]]}
+	{creature_styles[3]}
+		*picture: {creature_art[creature_styles[3]]}
+	*save: creature_choice
+	
+--
+-- SEND CREATURE CHOICE
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CREATURE"
+>> dataToSend["fields"]["question"] = "CHOICE"
+>> dataToSend["fields"]["prompt"] = "Which kind of creatures would you be most excited to find in the game world?"
+>> dataToSend["fields"]["options"] = "[{creature_styles[1]},{creature_styles[2]},{creature_styles[3]}]"
+>> dataToSend["fields"]["response"] = creature_choice
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+	
+-- CREATURE REACTION
+	
+*header: You chose The {creature_choice}!
+*image: {creature_art[creature_choice]}
+
+*question: Tell us about this creature's style and personality! Why did you choose it?
+	*type: paragraph
+	*blank
+	*save: reaction
+
+
+--
+-- SEND CREATURE REACTION
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "CREATURE"
+>> dataToSend["fields"]["question"] = "REACTION"
+>> dataToSend["fields"]["prompt"] = "Tell us about this creature's style and personality! Why did you choose it?"
+>> dataToSend["fields"]["options"] = creature_choice
+>> dataToSend["fields"]["response"] = reaction
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+
+
+
+-- END
+*label: the_end
+*header: The End
+Thank you for you help!
+
+We have recorded your choices, and will use them to create our game!
+
+*question: Would you like to tell us some of *your* ideas for the game?
+	Yes! I'd like to share some of my own ideas.
+		*goto: bonus
+	No thanks! I'm done for now.
+		*goto: thanks
+
+
+-- BONUS QUESTIONS
+*label: bonus
+*page
+	*header: Please lend us your imagination!
+	
+	Here are some questions we have!
+	
+	You can tell us as much or as little as you'd like!
+	
+	You can also leave questions blank, and can stop any time.
+		
+	*question: What kind of game world would YOU like to see? Would your world be high-tech, low-tech, or somewhere in between? Would it be set in the past or in the future? Would it look like a school, a park, or a mall?
+		*type: paragraph
+		*blank
+		*save: idea1
+		
+	*question: 	Would it be wacky and magical with things like floating islands, giant mushrooms, flying cars, or something else entirely? Or would it be more like our everyday world like in a city or on a farm, in the mountains or on a beach?
+		*type: paragraph
+		*blank
+		*save: idea2
+	
+	*question: What kind of challenges would players face in your world? Would they need to solve puzzles, battle monsters, or explore hidden ruins? Or would they need to survive a natural disaster, negotiate with aliens, or find a way to survive in a harsh environment? 
+		*type: paragraph
+		*blank
+		*save: idea3
+
+	*question: What do you think makes a good game? (This could be a video game or a board game).
+		*type: paragraph
+		*blank
+		*save: idea4
+		
+	*question: What games are you playing or have you played in the past that you liked? What do you like about them?
+		*type: paragraph
+		*blank
+		*save: idea5
+
+
+--
+-- SEND IDEAS
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "WORLD"
+>> dataToSend["fields"]["prompt"] = "What kind of game world would YOU like to see? Would your world be high-tech, low-tech, or somewhere in between? Would it be set in the past or in the future? Would it look like a school, a park, or a mall?"
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea1
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+--
+-- SEND IDEA2
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "WORLD"
+>> dataToSend["fields"]["prompt"] = "Would it be wacky and magical with things like floating islands, giant mushrooms, flying cars, or something else entirely? Or would it be more like our everyday world like in a city or on a farm, in the mountains or on a beach?"
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea2
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+--
+-- SEND IDEA 3
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "STORY"
+>> dataToSend["fields"]["prompt"] = "What kind of challenges would players face in your world? Would they need to solve puzzles, battle monsters, or explore hidden ruins? Or would they need to survive a natural disaster, negotiate with aliens, or find a way to survive in a harsh environment?"
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea3
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+
+	
+--
+-- SEND IDEA 4
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "GAMES"
+>> dataToSend["fields"]["prompt"] = "What do you think makes a good game? (This could be a video game or a board game)."
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea4
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+--
+-- SEND IDEA 5
+--
+
+>> dataToSend = {"fields" -> {}}
+>> dataToSend["fields"]["r_id"] = r_id
+>> dataToSend["fields"]["topic"] = "IDEA"
+>> dataToSend["fields"]["question"] = "GAMES"
+>> dataToSend["fields"]["prompt"] = "What games are you playing or have you played in the past that you liked? What do you like about them?"
+>> dataToSend["fields"]["options"] = ""
+>> dataToSend["fields"]["response"] = idea5
+
+*service: Airtable
+	*path: /Responses
+	*method: POST
+	*send: dataToSend
+	*success
+		>>recordInserted = 1
+	*error
+		>>recordInserted = 0
+		>>error = it
+		
+*if: recordInserted = 0
+	{error_message}
+	Here are the details: {error}
+	
+	
+*label: thanks
+*header: Thanks!
+Wonderful! Thank you so much for all your help :)

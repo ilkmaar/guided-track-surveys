@@ -1,0 +1,16 @@
+*if: not filter
+	>> filter = {"When?" -> "First day"}
+
+>> field = "{filter.keys}"
+>> value = "{filter[field]}"
+
+>> inputText = field
+*program: Encode characters for URLs
+>> fieldConverted = outputText
+
+>> inputText = value
+*program: Encode characters for URLs
+>> valueConverted = outputText
+
+-- cheating with conversion of '=' to %3D, '"' to %22, '{' to %7B and '}' to %7D because they can't be string values in GuidedTrack
+>> formula = "%7B{fieldConverted}%7D%3D%22{valueConverted}%22"
